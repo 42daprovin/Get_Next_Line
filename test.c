@@ -20,23 +20,27 @@ int get(int fd, char **line)
 	char		BUFFER[11];
 	char		*tmp;
 	char		*dst;
-	static char *stc;
+	static char *stc = NULL;
 	int			rt;
 	int			i;
 	int		count;
-	
+
 	if (fd < 0)
 		return (-1);
 	dst = ft_strdup("");
 	if (stc)
+	{
+		tmp = dst;
 		dst = ft_strjoin(dst, stc);
+		free(tmp);
+	}
 	while ((rt = read(fd, BUFFER, 10)) > 0)
 	{
 		BUFFER[rt] = '\0';
 		tmp = dst;
 		dst = ft_strjoin(dst, BUFFER);
 		free(tmp);
-		*line = ft_strdup(dst);
+		*line = dst;
 		i = 0;
 		while (*(*line + i))
 		{
@@ -52,7 +56,7 @@ int get(int fd, char **line)
 				if (BUFFER[i] == '\n')
 					count = i;
 				i++;
-			};
+			}
 			free(stc);
 			stc = (char*)malloc(sizeof(char) * (i - count));
 			i = 0;
@@ -61,29 +65,32 @@ int get(int fd, char **line)
 				stc[i] = BUFFER[count + i + 1];
 				i++;
 			}
-	//		printf("\033[0;33m%s\n", stc);
 			break ;
 		}
 	}
 	if (rt == 0)
+	{
+		free(stc);
+		free (dst);
 		return (0);
+	}
 	return (1);
 }
 
 int main(int ac, char **av)
 {
 	int fd;
-	int fd1;
 	char *line;
 
+	ac = 1;
 	line = NULL;
 	fd = open(av[1], O_RDONLY);
-	fd1 = open(av[2], O_RDONLY);
-	get(fd, &line);
-	printf("\033[0;38m%s\n", line);
-	get(fd1, &line);
-	printf("\033[0;33m%s\n", line);
-	get(fd, &line);
-	printf("\033[0;38m%s\n", line);
+	while(get(fd, &line))
+	{
+		printf("\033[0;38m%s\n", line);
+		free(line);
+		line = NULL;
+	}
+	while(1);
 	return 0;
 }
