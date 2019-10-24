@@ -6,7 +6,7 @@
 /*   By: daprovin <daprovin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/10/24 00:05:57 by daprovin          #+#    #+#             */
-/*   Updated: 2019/10/24 07:05:38 by daprovin         ###   ########.fr       */
+/*   Updated: 2019/10/24 07:30:36 by daprovin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -61,7 +61,7 @@ int get(int fd, char **line)
 				stc[i] = BUFFER[count + i + 1];
 				i++;
 			}
-			printf("\033[0;33m%s\n", stc);
+	//		printf("\033[0;33m%s\n", stc);
 			break ;
 		}
 	}
@@ -73,13 +73,17 @@ int get(int fd, char **line)
 int main(int ac, char **av)
 {
 	int fd;
+	int fd1;
 	char *line;
 
 	line = NULL;
 	fd = open(av[1], O_RDONLY);
-	while (get(fd, &line))
-	{
+	fd1 = open(av[2], O_RDONLY);
+	get(fd, &line);
 	printf("\033[0;38m%s\n", line);
-	}
+	get(fd1, &line);
+	printf("\033[0;33m%s\n", line);
+	get(fd, &line);
+	printf("\033[0;38m%s\n", line);
 	return 0;
 }
