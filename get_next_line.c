@@ -6,7 +6,7 @@
 /*   By: daprovin <daprovin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/10/25 03:04:16 by daprovin          #+#    #+#             */
-/*   Updated: 2019/10/25 06:49:47 by daprovin         ###   ########.fr       */
+/*   Updated: 2019/10/26 19:05:02 by daprovin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,6 +26,10 @@ int		ft_isinlst(int fd, t_statlst **lst, char **dst)
 	{
 		if (tmp_lst->fd == fd)
 		{
+			if (ft_isinstr('\n', tmp_lst->content))
+			{
+				ft_
+			}
 			tmp_dst = *dst;
 			*dst = ft_strjoin(*dst, tmp_lst->content);
 			free(tmp_dst);
@@ -93,10 +97,9 @@ int		ft_get(int fd, char **line)
 	if (fd < 0)
 		return (-1);
 	dst = ft_strdup("");
-	count = 0;
-	if (ft_isinlst(fd, &lst, &dst))
-		count = 1;
-	
+	count =  (ft_isinlst(fd, &lst, &dst));
+	if (count == 2)
+		return (1);
 	while ((rt = read(fd, BUFFER, 10)) > 0)
 	{
 		BUFFER[rt] = '\0';
@@ -130,20 +133,21 @@ int main(int ac, char **av)
 {
 	int fd;
 	char *line;
-	int fd1;
-	int rt;
+	int fd2;
 
-	ac = 1;
+	if (ac == 1)
+		fd = 0;
+	else
+	{
+		fd = open(av[1], O_RDONLY);
+		fd2 = open(av[2], O_RDONLY);
+	}
 	line = NULL;
-	fd = open(av[1], O_RDONLY);
-	fd1 = open(av[2], O_RDONLY);
-		rt =ft_get(fd, &line);
-		printf("\033[0;38m%s\n%d\n", line, rt);
-		free(line);
-		rt = ft_get(fd1, &line);
-		printf("\033[0;38m%s\n%d\n", line, rt);
-		rt = ft_get(fd, &line);
-		printf("\033[0;38m%s\n%d\n", line, rt);
+	ft_get(fd, &line);
+	printf("\033[0;38m%s\n", line);
+	ft_get(fd2, &line);
+	printf("\033[0;38m%s\n", line);
+	ft_get(fd, &line);
+	printf("\033[0;38m%s\n", line);
 	return 0;
 }
-
