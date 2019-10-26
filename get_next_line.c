@@ -6,7 +6,7 @@
 /*   By: daprovin <daprovin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/10/25 03:04:16 by daprovin          #+#    #+#             */
-/*   Updated: 2019/10/26 19:05:02 by daprovin         ###   ########.fr       */
+/*   Updated: 2019/10/26 21:40:47 by daprovin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,7 +16,30 @@
 #include "get_next_line.h"
 #include "libft.h"
 
-int		ft_isinlst(int fd, t_statlst **lst, char **dst)
+char	*ft_ovread(char **line, char *content)
+{
+	char *tmp;
+	char *tmp2;
+	int i;
+	int j;
+
+	tmp = content;
+	tmp2 = strdup(content);
+	while (tmp2[i] != '\n')
+		i++;
+	tmp2[i] = '\0';
+	*line = tmp2;
+	if (!(content = (char*)malloc(sizeof(char) * (ft_strlen(content) - i + 1))))
+		return (NULL);
+	while (tmp[j + i])
+	{
+		content[j] = tmp[j + i + 1];
+		j++;
+	}
+	free(tmp);
+	return (content);
+}
+int		ft_isinlst(int fd, t_statlst **lst, char **dst, char **line)
 {
 	t_statlst	*tmp_lst;
 	char		*tmp_dst;
@@ -28,7 +51,8 @@ int		ft_isinlst(int fd, t_statlst **lst, char **dst)
 		{
 			if (ft_isinstr('\n', tmp_lst->content))
 			{
-				ft_
+				tmp_lst->content = ft_ovread(line, tmp_lst->content);
+				return (2);
 			}
 			tmp_dst = *dst;
 			*dst = ft_strjoin(*dst, tmp_lst->content);
@@ -86,7 +110,7 @@ void	ft_changecontent(int fd, t_statlst **lst,char *dst)
 
 int		ft_get(int fd, char **line)
 {
-	char				BUFFER[11];
+	char				BUFFER[1001111];
 	char				*tmp;
 	char				*dst;
 	static t_statlst	*lst;
@@ -97,7 +121,7 @@ int		ft_get(int fd, char **line)
 	if (fd < 0)
 		return (-1);
 	dst = ft_strdup("");
-	count =  (ft_isinlst(fd, &lst, &dst));
+	count =  (ft_isinlst(fd, &lst, &dst, line));
 	if (count == 2)
 		return (1);
 	while ((rt = read(fd, BUFFER, 10)) > 0)
@@ -143,11 +167,7 @@ int main(int ac, char **av)
 		fd2 = open(av[2], O_RDONLY);
 	}
 	line = NULL;
-	ft_get(fd, &line);
-	printf("\033[0;38m%s\n", line);
-	ft_get(fd2, &line);
-	printf("\033[0;38m%s\n", line);
-	ft_get(fd, &line);
-	printf("\033[0;38m%s\n", line);
+	while (ft_get(fd, &line))
+		printf("%s\n", line);
 	return 0;
 }
