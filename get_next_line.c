@@ -6,7 +6,7 @@
 /*   By: daprovin <daprovin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/10/25 03:04:16 by daprovin          #+#    #+#             */
-/*   Updated: 2019/10/26 21:40:47 by daprovin         ###   ########.fr       */
+/*   Updated: 2019/10/28 19:33:06 by daprovin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,16 +19,15 @@
 char	*ft_ovread(char **line, char *content)
 {
 	char *tmp;
-	char *tmp2;
 	int i;
 	int j;
 
 	tmp = content;
-	tmp2 = strdup(content);
-	while (tmp2[i] != '\n')
+	free(*line);
+	*line = strdup(content);
+	while ((*line)[i] != '\n')
 		i++;
-	tmp2[i] = '\0';
-	*line = tmp2;
+	(*line)[i] = '\0';
 	if (!(content = (char*)malloc(sizeof(char) * (ft_strlen(content) - i + 1))))
 		return (NULL);
 	while (tmp[j + i])
@@ -39,7 +38,8 @@ char	*ft_ovread(char **line, char *content)
 	free(tmp);
 	return (content);
 }
-int		ft_isinlst(int fd, t_statlst **lst, char **dst, char **line)
+
+int		ft_isinlst(int fd, t_statlst **lst,/* char **dst,*/ char **line)
 {
 	t_statlst	*tmp_lst;
 	char		*tmp_dst;
@@ -54,8 +54,8 @@ int		ft_isinlst(int fd, t_statlst **lst, char **dst, char **line)
 				tmp_lst->content = ft_ovread(line, tmp_lst->content);
 				return (2);
 			}
-			tmp_dst = *dst;
-			*dst = ft_strjoin(*dst, tmp_lst->content);
+			tmp_dst = *line;
+			*line = ft_strjoin(*line, tmp_lst->content);
 			free(tmp_dst);
 			return (1);
 		}
@@ -97,7 +97,8 @@ void	ft_changecontent(int fd, t_statlst **lst,char *dst)
 	i = 0;
 	while (dst[i] != '\n')
 		i++;
-	tmp_lst->content = (char*)malloc(sizeof(ft_strlen(dst) - i));
+	if(!(tmp_lst->content = (char*)malloc(sizeof(ft_strlen(dst) - i))))
+		return ;
 	(tmp_lst->content)[ft_strlen(dst) - i - 1] = '\0';
 	j = 0;
 	while (dst[i + 1])
@@ -108,29 +109,18 @@ void	ft_changecontent(int fd, t_statlst **lst,char *dst)
 	}
 }
 
-int		ft_get(int fd, char **line)
+int		ft_read(int fd, t_statlst **lst, char *BUFFER, char **line)
 {
-	char				BUFFER[1001111];
-	char				*tmp;
-	char				*dst;
-	static t_statlst	*lst;
-	int					rt;
-	int					i;
-	int					count;
+	int i;
+	int rt;
+	char *tmp;
 
-	if (fd < 0)
-		return (-1);
-	dst = ft_strdup("");
-	count =  (ft_isinlst(fd, &lst, &dst, line));
-	if (count == 2)
-		return (1);
-	while ((rt = read(fd, BUFFER, 10)) > 0)
+	while ((rt = read(fd, BUFFER, BUFFER_SIZE)) > 0)
 	{
 		BUFFER[rt] = '\0';
-		tmp = dst;
-		dst = ft_strjoin(dst, BUFFER);
+		tmp = *line;//cambio
+		*line = ft_strjoin(*line, BUFFER);//cambio
 		free(tmp);
-		*line = dst;
 		i = 0;
 		while (*(*line + i))
 		{
@@ -140,16 +130,53 @@ int		ft_get(int fd, char **line)
 		}
 		if (ft_isinstr('\n', BUFFER))
 		{
-			if (!count)
-				ft_lstnewback(fd, &lst);
-			ft_changecontent(fd, &lst, BUFFER);
+			ft_changecontent(fd, lst, BUFFER);
 			break ;
 		}
 	}
-	if (rt == 0)
+	return (rt);
+}
+
+int		ft_get(int fd, char **line)
+{
+	char				BUFFER[BUFFER_SIZE + 1];
+	char				*tmp;
+	static t_statlst	*lst;
+	int					rt;
+//	int					i;
+	int					count;
+
+	if (fd < 0)
+		return (-1);
+	*line = ft_strdup("");//cambio
+	if ((count = ft_isinlst(fd, &lst,/* &dst,*/ line)) == 2)
+		return (1);
+	if (!count)
+		ft_lstnewback(fd, &lst);
+/*	while ((rt = read(fd, BUFFER, 10)) > 0)
 	{
+		BUFFER[rt] = '\0';
+		tmp = *line;//cambio
+		*line = ft_strjoin(*line, BUFFER);//cambio
+		free(tmp);
+		i = 0;
+		while (*(*line + i))
+		{
+			if (*(*line + i) == '\n')
+				*(*line + i) = '\0';
+			i++;
+		}
+		if (ft_isinstr('\n', BUFFER))
+		{
+//			if (!count)
+//				ft_lstnewback(fd, &lst);
+			ft_changecontent(fd, &lst, BUFFER);
+			break ;
+		}
+	} */
+	rt = ft_read(fd, &lst, BUFFER, line);
+	if (rt == 0)
 		return (0);
-	}
 	return (1);
 }
 
@@ -167,7 +194,15 @@ int main(int ac, char **av)
 		fd2 = open(av[2], O_RDONLY);
 	}
 	line = NULL;
-	while (ft_get(fd, &line))
-		printf("%s\n", line);
+	ft_get(fd, &line);
+	printf("%s\n", line);
+	free(line);
+	ft_get(fd2, &line);
+	printf("%s\n", line);
+	free(line);
+	ft_get(fd, &line);
+	printf("%s\n", line);
+
+	while (1);
 	return 0;
 }
