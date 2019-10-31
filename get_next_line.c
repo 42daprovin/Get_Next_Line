@@ -6,7 +6,7 @@
 /*   By: daprovin <daprovin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/10/25 03:04:16 by daprovin          #+#    #+#             */
-/*   Updated: 2019/10/30 19:28:20 by daprovin         ###   ########.fr       */
+/*   Updated: 2019/10/31 16:10:20 by daprovin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -114,14 +114,11 @@ int		ft_read(int fd, t_statlst **lst, char *buffer, char **line)
 
 int		get_next_line(int fd, char **line)
 {
-	char				*buffer;
-	char				*tmp;
+	char				buffer[BUFFER_SIZE + 1];
 	static t_statlst	*lst;
 	int					rt;
 	int					count;
 
-	if (!(buffer = (char*)malloc(sizeof(char) * (BUFFER_SIZE + 1))))
-		return (-1);
 	*line = ft_strjoin("", "");
 	if ((count = ft_isinlst(fd, &lst, line)) == 2)
 		return (1);
@@ -129,8 +126,13 @@ int		get_next_line(int fd, char **line)
 		ft_lstnewback(fd, &lst);
 	rt = ft_read(fd, &lst, buffer, line);
 	if (rt == 0)
+	{
+		ft_freelst(fd, &lst);
 		return (0);
-	return (rt);
+	}
+	if (rt > 0)
+		return (1);
+	return (-1);
 }
 
 int		main(int ac, char **av)
@@ -140,20 +142,26 @@ int		main(int ac, char **av)
 	int		fd2;
 
 	if (ac == 1)
+	{
 		fd = 0;
+		fd2 = 0;
+	}
 	else
 	{
 		fd = open(av[1], O_RDONLY);
 		fd2 = open(av[2], O_RDONLY);
 	}
 	line = NULL;
-	printf("%d", get_next_line(fd, &line));
+	printf("%d\n", get_next_line(fd, &line));
 	printf("%s\n", line);
 	free(line);
-	get_next_line(fd2, &line);
+	printf("%d\n", get_next_line(fd2, &line));
 	printf("%s\n", line);
 	free(line);
-	get_next_line(fd, &line);
+	printf("%d\n", get_next_line(fd, &line));
 	printf("%s\n", line);
+	free(line);
+
+	while (1);
 	return 0;
 }
